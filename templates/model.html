@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Analyzer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f1119;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        .tech-title {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+        }
+        
+        .tech-card {
+            background-color: #1a1d29;
+            border: 1px solid #2d3748;
+            box-shadow: 0 0 15px rgba(66, 153, 225, 0.15);
+        }
+        
+        .tech-input {
+            background-color: #252836;
+            border: 1px solid #3f4865;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        .tech-input:focus {
+            border-color: #f56565;
+            box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+        }
+        
+        .tech-button {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+        
+        .tech-button:hover {
+            background: linear-gradient(135deg, #e53e3e 0%, #f56565 100%);
+            box-shadow: 0 0 15px rgba(245, 101, 101, 0.4);
+        }
+        
+        .gauge {
+            width: 100%;
+            height: 10px;
+            background-color: #2d3748;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .gauge-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .red-cyber-border {
+            position: relative;
+        }
+        
+        .red-cyber-border:after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #f56565, transparent, #e53e3e, transparent, #f56565);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 0.5rem;
+            animation: animateRedGlow 8s linear infinite;
+        }
+        
+        @keyframes animateRedGlow {
+            0% {
+                background-position: 0 0;
+            }
+            50% {
+                background-position: 400% 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+        
+        .section-title {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-6 py-10">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold mb-2 tech-title">
+                <span class="section-title">CONTENT ANALYZER</span>
+            </h1>
+            <p class="text-gray-400">Advanced content moderation system</p>
+        </header>
+
+        <div class="tech-card rounded-lg p-6 mb-8 red-cyber-border">
+            <div class="mb-4">
+                <label for="text-input" class="block text-red-300 font-medium mb-2">Message content:</label>
+                <textarea id="text-input" rows="4" class="w-full tech-input rounded-lg p-3 focus:outline-none" placeholder="Enter text to analyze..."></textarea>
+            </div>
+            <div class="flex justify-end">
+                <button id="check-button" class="tech-button text-white font-medium py-2 px-8 rounded-lg">
+                    ANALYZE
+                </button>
+            </div>
+        </div>
+
+        <div id="results" class="tech-card rounded-lg p-6 hidden red-cyber-border">
+            <h2 class="text-xl font-semibold mb-6 section-title tech-title">ANALYSIS RESULTS</h2>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-red-300">Content Tags:</h3>
+                <div id="tags-container" class="flex flex-wrap"></div>
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-medium mb-3 text-red-300">Detailed Scores:</h3>
+                <div id="scores-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkButton = document.getElementById('check-button');
+            const textInput = document.getElementById('text-input');
+            const results = document.getElementById('results');
+            const tagsContainer = document.getElementById('tags-container');
+            const scoresContainer = document.getElementById('scores-container');
+
+            const tagColors = {
+                'toxic': 'background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%)',
+                'severe_toxic': 'background: linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%)',
+                'obscene': 'background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%)',
+                'threat': 'background: linear-gradient(135deg, #d69e2e 0%, #b7791f 100%)',
+                'insult': 'background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%)',
+                'identity_hate': 'background: linear-gradient(135deg, #d53f8c 0%, #b83280 100%)',
+                'nsfw': 'background: linear-gradient(135deg, #d53f8c 0%, #9f1239 100%)',
+                'spam': 'background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%)',
+                'clean': 'background: linear-gradient(135deg, #48bb78 0%, #38a169 100%)'
+            };
+
+            checkButton.addEventListener('click', async function() {
+                const text = textInput.value.trim();
+                
+                if (!text) {
+                    alert('Please enter some text to analyze.');
+                    return;
+                }
+                
+                try {
+                    checkButton.disabled = true;
+                    checkButton.innerText = 'ANALYZING...';
+                    
+                    const response = await fetch('/classify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text }),
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Server error');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Display results
+                    displayResults(data);
+                    results.classList.remove('hidden');
+                    
+                } catch (error) {
+                    alert('Error analyzing text. Please try again.');
+                    console.error('Error:', error);
+                } finally {
+                    checkButton.disabled = false;
+                    checkButton.innerText = 'ANALYZE';
+                }
+            });
+            
+            function displayResults(data) {
+                // Clear previous results
+                tagsContainer.innerHTML = '';
+                scoresContainer.innerHTML = '';
+                
+                // Display tags
+                data.prediction_tags.forEach(tag => {
+                    const tagEl = document.createElement('div');
+                    tagEl.className = 'tag';
+                    tagEl.style = tagColors[tag] || 'background: linear-gradient(135deg, #718096 0%, #4a5568 100%)';
+                    tagEl.textContent = tag.replace('_', ' ').toUpperCase();
+                    tagsContainer.appendChild(tagEl);
+                });
+                
+                // Display scores
+                Object.entries(data.toxic_scores).forEach(([label, score]) => {
+                    const scoreContainer = document.createElement('div');
+                    scoreContainer.className = 'mb-2';
+                    
+                    const labelEl = document.createElement('div');
+                    labelEl.className = 'flex justify-between mb-1';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'text-gray-300';
+                    nameSpan.textContent = label.replace('_', ' ').toUpperCase();
+                    
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = score > 50 ? 'font-semibold text-red-400' : 'text-gray-400';
+                    valueSpan.textContent = `${score}%`;
+                    
+                    labelEl.appendChild(nameSpan);
+                    labelEl.appendChild(valueSpan);
+                    
+                    const gauge = document.createElement('div');
+                    gauge.className = 'gauge';
+                    
+                    const gaugeFill = document.createElement('div');
+                    gaugeFill.className = 'gauge-fill';
+                    gaugeFill.style.width = `${score}%`;
+                    
+                    // Color based on score
+                    if (score < 20) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #48bb78, #38a169)';
+                    } else if (score < 50) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #ecc94b, #d69e2e)';
+                    } else {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #f56565, #c53030)';
+                    }
+                    
+                    gauge.appendChild(gaugeFill);
+                    
+                    scoreContainer.appendChild(labelEl);
+                    scoreContainer.appendChild(gauge);
+                    
+                    scoresContainer.appendChild(scoreContainer);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
