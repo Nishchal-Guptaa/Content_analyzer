@@ -46,4 +46,6 @@ pip install -r requirements.txt
 touch .env
 ```
 In your .env file
+```
 SECRET_KEY=your-secret-key-here
+```
