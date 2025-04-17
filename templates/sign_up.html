@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Content Analyzer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f1119;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+            background-image: 
+                radial-gradient(circle at 30% 20%, rgba(245, 101, 101, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(245, 101, 101, 0.05) 0%, transparent 50%);
+        }
+        
+        .tech-title {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+        }
+        
+        .tech-card {
+            background-color: #1a1d29;
+            border: 1px solid #2d3748;
+            box-shadow: 0 0 15px rgba(66, 153, 225, 0.15);
+        }
+        
+        .tech-input {
+            background-color: #252836;
+            border: 1px solid #3f4865;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        .tech-input:focus {
+            border-color: #f56565;
+            box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+        }
+        
+        .tech-button {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+        
+        .tech-button:hover {
+            background: linear-gradient(135deg, #e53e3e 0%, #f56565 100%);
+            box-shadow: 0 0 15px rgba(245, 101, 101, 0.4);
+        }
+        
+        .tech-button-secondary {
+            background: transparent;
+            border: 1px solid #f56565;
+            color: #f56565;
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+        
+        .tech-button-secondary:hover {
+            background-color: rgba(245, 101, 101, 0.1);
+            box-shadow: 0 0 15px rgba(245, 101, 101, 0.2);
+        }
+        
+        .red-cyber-border {
+            position: relative;
+        }
+        
+        .red-cyber-border:after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #f56565, transparent, #e53e3e, transparent, #f56565);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 0.5rem;
+            animation: animateRedGlow 8s linear infinite;
+        }
+        
+        @keyframes animateRedGlow {
+            0% {
+                background-position: 0 0;
+            }
+            50% {
+                background-position: 400% 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+        
+        .section-title {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(29, 33, 46, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(29, 33, 46, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .error-feedback {
+            color: #f56565;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            font-family: 'Rajdhani', sans-serif;
+        }
+    </style>
+</head>
+<body class="grid-bg min-h-screen flex items-center justify-center">
+    <div class="container mx-auto px-6 py-10 max-w-md">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold mb-2 tech-title">
+                <span class="section-title">CONTENT ANALYZER</span>
+            </h1>
+            <p class="text-gray-400">Advanced content moderation system</p>
+        </header>
+
+        <div class="tech-card rounded-lg p-6 mb-6 red-cyber-border">
+            <h2 class="text-xl font-semibold mb-6 text-center text-red-300 tech-title">CREATE ACCOUNT</h2>
+            
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-4">
+                    <label for="username" class="block text-red-300 font-medium mb-2">USERNAME</label>
+                    {{ form.username(class="w-full tech-input rounded-lg p-3 focus:outline-none", placeholder="Username (4-20 characters)") }}
+                    {% if form.username.errors %}
+                        {% for error in form.username.errors %}
+                            <div class="error-feedback">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div class="mb-6">
+                    <label for="password" class="block text-red-300 font-medium mb-2">PASSWORD</label>
+                    {{ form.password(class="w-full tech-input rounded-lg p-3 focus:outline-none", placeholder="Password (4-20 characters)") }}
+                    {% if form.password.errors %}
+                        {% for error in form.password.errors %}
+                            <div class="error-feedback">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div class="flex justify-center">
+                    {{ form.submit(class="tech-button text-white font-medium py-2 px-8 rounded-lg w-full", value="REGISTER") }}
+                </div>
+            </form>
+        </div>
+        
+        <div class="text-center">
+            <button onclick="window.location.href='{{ url_for('login') }}'" class="tech-button-secondary py-2 px-6 rounded-lg">
+                ALREADY HAVE AN ACCOUNT
+            </button>
+        </div>
+    </div>
+
+    <div class="absolute bottom-6 right-6">
+        <div class="text-red-400 text-sm font-medium tech-title">
+            SECURE REGISTRATION v1.0
+        </div>
+    </div>
+</body>
+</html>

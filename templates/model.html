@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Analyzer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f1119;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        .tech-title {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+        }
+        
+        .tech-card {
+            background-color: #1a1d29;
+            border: 1px solid #2d3748;
+            box-shadow: 0 0 15px rgba(66, 153, 225, 0.15);
+        }
+        
+        .tech-input {
+            background-color: #252836;
+            border: 1px solid #3f4865;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        .tech-input:focus {
+            border-color: #f56565;
+            box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+        }
+        
+        .tech-button {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+        
+        .tech-button:hover {
+            background: linear-gradient(135deg, #e53e3e 0%, #f56565 100%);
+            box-shadow: 0 0 15px rgba(245, 101, 101, 0.4);
+        }
+        
+        .gauge {
+            width: 100%;
+            height: 10px;
+            background-color: #2d3748;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .gauge-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .red-cyber-border {
+            position: relative;
+        }
+        
+        .red-cyber-border:after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #f56565, transparent, #e53e3e, transparent, #f56565);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 0.5rem;
+            animation: animateRedGlow 8s linear infinite;
+        }
+        
+        @keyframes animateRedGlow {
+            0% {
+                background-position: 0 0;
+            }
+            50% {
+                background-position: 400% 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+        
+        .section-title {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tab {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #f56565;
+            color: #f56565;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #3f4865;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #f56565;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #3f4865;
+        }
+
+        .chunk-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .chunk-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chunk-container::-webkit-scrollbar-track {
+            background: #1a1d29;
+        }
+
+        .chunk-container::-webkit-scrollbar-thumb {
+            background: #3f4865;
+            border-radius: 4px;
+        }
+
+        .chunk-container::-webkit-scrollbar-thumb:hover {
+            background: #f56565;
+        }
+
+        .chunk-item {
+            border-left: 3px solid #3f4865;
+            padding-left: 10px;
+            margin-bottom: 10px;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 0 auto;
+            display: block;
+            border-radius: 8px;
+            border: 2px solid #3f4865;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-6 py-10">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold mb-2 tech-title">
+                <span class="section-title">CONTENT ANALYZER</span>
+            </h1>
+            <p class="text-gray-400">Advanced content moderation system</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-700 mb-6">
+            <div id="text-tab" class="tab active px-4 py-2 font-medium">TEXT</div>
+            <div id="file-tab" class="tab px-4 py-2 font-medium">TEXT FILE</div>
+            <div id="image-tab" class="tab px-4 py-2 font-medium">IMAGE</div>
+        </div>
+
+        <!-- Text Analysis Panel -->
+        <div id="text-panel" class="panel">
+            <div class="tech-card rounded-lg p-6 mb-8 red-cyber-border">
+                <div class="mb-4">
+                    <label for="text-input" class="block text-red-300 font-medium mb-2">Message content:</label>
+                    <textarea id="text-input" rows="4" class="w-full tech-input rounded-lg p-3 focus:outline-none" placeholder="Enter text to analyze..."></textarea>
+                </div>
+                <div class="flex justify-end">
+                    <button id="check-button" class="tech-button text-white font-medium py-2 px-8 rounded-lg">
+                        ANALYZE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Upload Panel -->
+        <div id="file-panel" class="panel hidden">
+            <div class="tech-card rounded-lg p-6 mb-8 red-cyber-border">
+                <div class="mb-4">
+                    <label class="block text-red-300 font-medium mb-2">Upload a text file:</label>
+                    <div class="file-upload-area" id="file-drop-area">
+                        <div class="upload-icon">📄</div>
+                        <p class="mb-4">Drag and drop a .txt file here or</p>
+                        <input type="file" id="file-input" class="hidden" accept=".txt">
+                        <button id="file-browse-button" class="tech-button text-white font-medium py-2 px-6 rounded-lg">
+                            BROWSE FILES
+                        </button>
+                        <p id="file-name" class="mt-4 text-gray-400 hidden"></p>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button id="analyze-file-button" class="tech-button text-white font-medium py-2 px-8 rounded-lg opacity-50 cursor-not-allowed" disabled>
+                        ANALYZE FILE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Upload Panel -->
+        <div id="image-panel" class="panel hidden">
+            <div class="tech-card rounded-lg p-6 mb-8 red-cyber-border">
+                <div class="mb-4">
+                    <label class="block text-red-300 font-medium mb-2">Upload an image:</label>
+                    <div class="file-upload-area" id="image-drop-area">
+                        <div class="upload-icon">🖼️</div>
+                        <p class="mb-4">Drag and drop an image here or</p>
+                        <input type="file" id="image-input" class="hidden" accept="image/*">
+                        <button id="image-browse-button" class="tech-button text-white font-medium py-2 px-6 rounded-lg">
+                            BROWSE IMAGES
+                        </button>
+                        <p id="image-name" class="mt-4 text-gray-400 hidden"></p>
+                    </div>
+                </div>
+                <div id="image-preview-container" class="mb-4 hidden">
+                    <label class="block text-red-300 font-medium mb-2">Preview:</label>
+                    <img id="image-preview" class="preview-image">
+                </div>
+                <div class="flex justify-end">
+                    <button id="analyze-image-button" class="tech-button text-white font-medium py-2 px-8 rounded-lg opacity-50 cursor-not-allowed" disabled>
+                        ANALYZE IMAGE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel for Text -->
+        <div id="text-results" class="tech-card rounded-lg p-6 hidden red-cyber-border">
+            <h2 class="text-xl font-semibold mb-6 section-title tech-title">TEXT ANALYSIS RESULTS</h2>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-red-300">Content Tags:</h3>
+                <div id="tags-container" class="flex flex-wrap"></div>
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-medium mb-3 text-red-300">Detailed Scores:</h3>
+                <div id="scores-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Results Panel for File -->
+        <div id="file-results" class="tech-card rounded-lg p-6 hidden red-cyber-border">
+            <h2 class="text-xl font-semibold mb-6 section-title tech-title">FILE ANALYSIS RESULTS</h2>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-red-300">File Information:</h3>
+                <p id="file-info" class="text-gray-300"></p>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-red-300">Content Tags:</h3>
+                <div id="file-tags-container" class="flex flex-wrap"></div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-red-300">Detailed Scores:</h3>
+                <div id="file-scores-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-medium mb-3 text-red-300">File Chunks Analysis:</h3>
+                <div id="chunks-container" class="chunk-container"></div>
+            </div>
+        </div>
+
+        <!-- Results Panel for Image -->
+        <div id="image-results" class="tech-card rounded-lg p-6 hidden red-cyber-border">
+            <h2 class="text-xl font-semibold mb-6 section-title tech-title">IMAGE ANALYSIS RESULTS</h2>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-red-300">Classification Result:</h3>
+                <div id="image-classification" class="flex flex-wrap"></div>
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-medium mb-3 text-red-300">Class Probabilities:</h3>
+                <div id="image-scores-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching logic
+            const tabs = document.querySelectorAll('.tab');
+            const panels = document.querySelectorAll('.panel');
+            const resultPanels = [
+                document.getElementById('text-results'),
+                document.getElementById('file-results'),
+                document.getElementById('image-results')
+            ];
+
+            function setActiveTab(tabId) {
+                // Reset all tabs and panels
+                tabs.forEach(tab => tab.classList.remove('active'));
+                panels.forEach(panel => panel.classList.add('hidden'));
+                resultPanels.forEach(panel => panel.classList.add('hidden'));
+
+                // Set active tab and panel
+                document.getElementById(tabId).classList.add('active');
+                
+                if (tabId === 'text-tab') {
+                    document.getElementById('text-panel').classList.remove('hidden');
+                } else if (tabId === 'file-tab') {
+                    document.getElementById('file-panel').classList.remove('hidden');
+                } else if (tabId === 'image-tab') {
+                    document.getElementById('image-panel').classList.remove('hidden');
+                }
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    setActiveTab(this.id);
+                });
+            });
+
+            // Text analysis functionality
+            const checkButton = document.getElementById('check-button');
+            const textInput = document.getElementById('text-input');
+            const textResults = document.getElementById('text-results');
+            const tagsContainer = document.getElementById('tags-container');
+            const scoresContainer = document.getElementById('scores-container');
+
+            // File upload functionality
+            const fileInput = document.getElementById('file-input');
+            const fileBrowseButton = document.getElementById('file-browse-button');
+            const analyzeFileButton = document.getElementById('analyze-file-button');
+            const fileDropArea = document.getElementById('file-drop-area');
+            const fileName = document.getElementById('file-name');
+            const fileResults = document.getElementById('file-results');
+            const fileInfo = document.getElementById('file-info');
+            const fileTagsContainer = document.getElementById('file-tags-container');
+            const fileScoresContainer = document.getElementById('file-scores-container');
+            const chunksContainer = document.getElementById('chunks-container');
+
+            // Image upload functionality
+            const imageInput = document.getElementById('image-input');
+            const imageBrowseButton = document.getElementById('image-browse-button');
+            const analyzeImageButton = document.getElementById('analyze-image-button');
+            const imageDropArea = document.getElementById('image-drop-area');
+            const imageName = document.getElementById('image-name');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const imageResults = document.getElementById('image-results');
+            const imageClassification = document.getElementById('image-classification');
+            const imageScoresContainer = document.getElementById('image-scores-container');
+
+            const tagColors = {
+                'toxic': 'background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%)',
+                'severe_toxic': 'background: linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%)',
+                'obscene': 'background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%)',
+                'threat': 'background: linear-gradient(135deg, #d69e2e 0%, #b7791f 100%)',
+                'insult': 'background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%)',
+                'identity_hate': 'background: linear-gradient(135deg, #d53f8c 0%, #b83280 100%)',
+                'nsfw': 'background: linear-gradient(135deg, #d53f8c 0%, #9f1239 100%)',
+                'porn': 'background: linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%)',
+                'hentai': 'background: linear-gradient(135deg, #9f1239 0%, #7f1d1d 100%)',
+                'sexy': 'background: linear-gradient(135deg, #d53f8c 0%, #9f1239 100%)',
+                'drawing': 'background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%)',
+                'neutral': 'background: linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                'spam': 'background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%)',
+                'clean': 'background: linear-gradient(135deg, #48bb78 0%, #38a169 100%)'
+            };
+
+            // Text analysis
+            checkButton.addEventListener('click', async function() {
+                const text = textInput.value.trim();
+                
+                if (!text) {
+                    alert('Please enter some text to analyze.');
+                    return;
+                }
+                
+                try {
+                    checkButton.disabled = true;
+                    checkButton.innerText = 'ANALYZING...';
+                    
+                    const response = await fetch('/classify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text }),
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Server error');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Display results
+                    displayTextResults(data);
+                    textResults.classList.remove('hidden');
+                    
+                } catch (error) {
+                    alert('Error analyzing text. Please try again.');
+                    console.error('Error:', error);
+                } finally {
+                    checkButton.disabled = false;
+                    checkButton.innerText = 'ANALYZE';
+                }
+            });
+            
+            function displayTextResults(data) {
+                // Clear previous results
+                tagsContainer.innerHTML = '';
+                scoresContainer.innerHTML = '';
+                
+                // Display tags
+                data.prediction_tags.forEach(tag => {
+                    const tagEl = document.createElement('div');
+                    tagEl.className = 'tag';
+                    tagEl.style = tagColors[tag] || 'background: linear-gradient(135deg, #718096 0%, #4a5568 100%)';
+                    tagEl.textContent = tag.replace('_', ' ').toUpperCase();
+                    tagsContainer.appendChild(tagEl);
+                });
+                
+                // Display scores
+                Object.entries(data.toxic_scores).forEach(([label, score]) => {
+                    const scoreContainer = document.createElement('div');
+                    scoreContainer.className = 'mb-2';
+                    
+                    const labelEl = document.createElement('div');
+                    labelEl.className = 'flex justify-between mb-1';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'text-gray-300';
+                    nameSpan.textContent = label.replace('_', ' ').toUpperCase();
+                    
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = score > 50 ? 'font-semibold text-red-400' : 'text-gray-400';
+                    valueSpan.textContent = `${score}%`;
+                    
+                    labelEl.appendChild(nameSpan);
+                    labelEl.appendChild(valueSpan);
+                    
+                    const gauge = document.createElement('div');
+                    gauge.className = 'gauge';
+                    
+                    const gaugeFill = document.createElement('div');
+                    gaugeFill.className = 'gauge-fill';
+                    gaugeFill.style.width = `${score}%`;
+                    
+                    // Color based on score
+                    if (score < 20) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #48bb78, #38a169)';
+                    } else if (score < 50) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #ecc94b, #d69e2e)';
+                    } else {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #f56565, #c53030)';
+                    }
+                    
+                    gauge.appendChild(gaugeFill);
+                    
+                    scoreContainer.appendChild(labelEl);
+                    scoreContainer.appendChild(gauge);
+                    
+                    scoresContainer.appendChild(scoreContainer);
+                });
+            }
+
+            // File upload functionality
+            fileBrowseButton.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function() {
+                handleFileSelect(this.files);
+            });
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileDropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileDropArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileDropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                fileDropArea.style.borderColor = '#f56565';
+            }
+
+            function unhighlight() {
+                fileDropArea.style.borderColor = '#3f4865';
+            }
+
+            fileDropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFileSelect(files);
+            });
+
+            function handleFileSelect(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.name.endsWith('.txt')) {
+                        fileName.textContent = file.name;
+                        fileName.classList.remove('hidden');
+                        analyzeFileButton.disabled = false;
+                        analyzeFileButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        alert('Please select a .txt file');
+                        fileInput.value = '';
+                        fileName.classList.add('hidden');
+                        analyzeFileButton.disabled = true;
+                        analyzeFileButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            }
+
+            analyzeFileButton.addEventListener('click', async function() {
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    alert('Please select a file first.');
+                    return;
+                }
+
+                try {
+                    analyzeFileButton.disabled = true;
+                    analyzeFileButton.innerText = 'ANALYZING...';
+
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+
+                    const response = await fetch('/classify_file', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Server error');
+                    }
+
+                    const data = await response.json();
+
+                    // Display results
+                    displayFileResults(data);
+                    fileResults.classList.remove('hidden');
+
+                } catch (error) {
+                    alert('Error analyzing file. Please try again.');
+                    console.error('Error:', error);
+                } finally {
+                    analyzeFileButton.disabled = false;
+                    analyzeFileButton.innerText = 'ANALYZE FILE';
+                }
+            });
+
+            function displayFileResults(data) {
+                // Clear previous results
+                fileInfo.innerHTML = '';
+                fileTagsContainer.innerHTML = '';
+                fileScoresContainer.innerHTML = '';
+                chunksContainer.innerHTML = '';
+
+                // Display file info
+                fileInfo.innerHTML = `<strong>Filename:</strong> ${data.filename} | <strong>Total Chunks Analyzed:</strong> ${data.total_chunks}`;
+
+                // Display tags
+                data.prediction_tags.forEach(tag => {
+                    const tagEl = document.createElement('div');
+                    tagEl.className = 'tag';
+                    tagEl.style = tagColors[tag] || 'background: linear-gradient(135deg, #718096 0%, #4a5568 100%)';
+                    tagEl.textContent = tag.replace('_', ' ').toUpperCase();
+                    fileTagsContainer.appendChild(tagEl);
+                });
+
+                // Display scores
+                Object.entries(data.toxic_scores).forEach(([label, score]) => {
+                    const scoreContainer = document.createElement('div');
+                    scoreContainer.className = 'mb-2';
+                    
+                    const labelEl = document.createElement('div');
+                    labelEl.className = 'flex justify-between mb-1';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'text-gray-300';
+                    nameSpan.textContent = label.replace('_', ' ').toUpperCase();
+                    
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = score > 50 ? 'font-semibold text-red-400' : 'text-gray-400';
+                    valueSpan.textContent = `${score}%`;
+                    
+                    labelEl.appendChild(nameSpan);
+                    labelEl.appendChild(valueSpan);
+                    
+                    const gauge = document.createElement('div');
+                    gauge.className = 'gauge';
+                    
+                    const gaugeFill = document.createElement('div');
+                    gaugeFill.className = 'gauge-fill';
+                    gaugeFill.style.width = `${score}%`;
+                    
+                    // Color based on score
+                    if (score < 20) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #48bb78, #38a169)';
+                    } else if (score < 50) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #ecc94b, #d69e2e)';
+                    } else {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #f56565, #c53030)';
+                    }
+                    
+                    gauge.appendChild(gaugeFill);
+                    
+                    scoreContainer.appendChild(labelEl);
+                    scoreContainer.appendChild(gauge);
+                    
+                    fileScoresContainer.appendChild(scoreContainer);
+                });
+
+                // Display chunk results
+                if (data.chunk_results && data.chunk_results.length > 0) {
+                    data.chunk_results.forEach((result, index) => {
+                        const chunkEl = document.createElement('div');
+                        chunkEl.className = 'chunk-item p-3 mb-4 bg-gray-900 bg-opacity-50 rounded';
+                        
+                        const headerEl = document.createElement('div');
+                        headerEl.className = 'flex justify-between items-center mb-2';
+                        
+                        const titleEl = document.createElement('h4');
+                        titleEl.className = 'font-medium text-red-300';
+                        titleEl.textContent = `Chunk ${index + 1}`;
+                        
+                        const tagsWrapper = document.createElement('div');
+                        tagsWrapper.className = 'flex flex-wrap';
+                        
+                        result.analysis.prediction_tags.forEach(tag => {
+                            const tagEl = document.createElement('div');
+                            tagEl.className = 'tag text-xs';
+                            tagEl.style = tagColors[tag] || 'background: linear-gradient(135deg, #718096 0%, #4a5568 100%)';
+                            tagEl.textContent = tag.replace('_', ' ').toUpperCase();
+                            tagsWrapper.appendChild(tagEl);
+                        });
+                        
+                        headerEl.appendChild(titleEl);
+                        headerEl.appendChild(tagsWrapper);
+                        
+                        const textEl = document.createElement('p');
+                        textEl.className = 'text-gray-400 text-sm mt-2';
+                        textEl.textContent = result.chunk;
+                        
+                        chunkEl.appendChild(headerEl);
+                        chunkEl.appendChild(textEl);
+                        
+                        chunksContainer.appendChild(chunkEl);
+                    });
+                }
+            }
+
+            // Image upload functionality
+            imageBrowseButton.addEventListener('click', function() {
+                imageInput.click();
+            });
+
+            imageInput.addEventListener('change', function() {
+                handleImageSelect(this.files);
+            });
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                imageDropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                imageDropArea.addEventListener(eventName, highlightImage, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                imageDropArea.addEventListener(eventName, unhighlightImage, false);
+            });
+
+            function highlightImage() {
+                imageDropArea.style.borderColor = '#f56565';
+            }
+
+            function unhighlightImage() {
+                imageDropArea.style.borderColor = '#3f4865';
+            }
+
+            imageDropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleImageSelect(files);
+            });
+
+            function handleImageSelect(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+                    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+                    if (validTypes.includes(file.type)) {
+                        imageName.textContent = file.name;
+                        imageName.classList.remove('hidden');
+                        analyzeImageButton.disabled = false;
+                        analyzeImageButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                        // Preview the image
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            imagePreview.src = event.target.result;
+                            imagePreviewContainer.classList.remove('hidden');
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        alert('Please select a valid image file (JPEG, PNG, GIF).');
+                        imageInput.value = '';
+                        imageName.classList.add('hidden');
+                        analyzeImageButton.disabled = true;
+                        analyzeImageButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            }
+
+            analyzeImageButton.addEventListener('click', async function() {
+                if (!imageInput.files || imageInput.files.length === 0) {
+                    alert('Please select an image first.');
+                    return;
+                }
+
+                try {
+                    analyzeImageButton.disabled = true;
+                    analyzeImageButton.innerText = 'ANALYZING...';
+
+                    const formData = new FormData();
+                    formData.append('image', imageInput.files[0]);
+
+                    const response = await fetch('/classify_image', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Server error');
+                    }
+
+                    const data = await response.json();
+
+                    // Display results
+                    displayImageResults(data);
+                    imageResults.classList.remove('hidden');
+
+                } catch (error) {
+                    alert('Error analyzing image. Please try again.');
+                    console.error('Error:', error);
+                } finally {
+                    analyzeImageButton.disabled = false;
+                    analyzeImageButton.innerText = 'ANALYZE IMAGE';
+                }
+            });
+
+            function displayImageResults(data) {
+                // Clear previous results
+                imageClassification.innerHTML = '';
+                imageScoresContainer.innerHTML = '';
+
+                // Display classification result
+                const classificationEl = document.createElement('div');
+                classificationEl.className = 'tag';
+                classificationEl.textContent = `Predicted Label: ${data.predicted_label}`;
+                imageClassification.appendChild(classificationEl);
+
+                // Display probabilities
+                Object.entries(data.probabilities).forEach(([label, probability]) => {
+                    const scoreContainer = document.createElement('div');
+                    scoreContainer.className = 'mb-2';
+
+                    const labelEl = document.createElement('div');
+                    labelEl.className = 'flex justify-between mb-1';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'text-gray-300';
+                    nameSpan.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = 'text-gray-400';
+                    valueSpan.textContent = `${probability}%`;
+
+                    labelEl.appendChild(nameSpan);
+                    labelEl.appendChild(valueSpan);
+
+                    const gauge = document.createElement('div');
+                    gauge.className = 'gauge';
+
+                    const gaugeFill = document.createElement('div');
+                    gaugeFill.className = 'gauge-fill';
+                    gaugeFill.style.width = `${probability}%`;
+
+                    // Color based on probability
+                    if (probability < 20) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #48bb78, #38a169)';
+                    } else if (probability < 50) {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #ecc94b, #d69e2e)';
+                    } else {
+                        gaugeFill.style.background = 'linear-gradient(90deg, #f56565, #c53030)';
+                    }
+
+                    gauge.appendChild(gaugeFill);
+
+                    scoreContainer.appendChild(labelEl);
+                    scoreContainer.appendChild(gauge);
+
+                    imageScoresContainer.appendChild(scoreContainer);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

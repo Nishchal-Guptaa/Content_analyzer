@@ -1,0 +1,13 @@
+Flask==2.2.5
+Flask-Login==0.6.3
+Flask-WTF==1.1.1
+Flask-Bcrypt==1.0.1
+Flask-SQLAlchemy==3.1.1
+Flask-Admin==1.6.1
+transformers==4.40.1
+torch==2.2.2
+Pillow==10.3.0
+python-dotenv==1.0.1
+WTForms==3.1.2
+scipy==1.13.0
+gunicorn==21.2.0

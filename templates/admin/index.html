@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <!-- Custom CSS will be added by you later -->
+</head>
+<style>
+    body{
+        background-color: #0f1119;
+        font-family: 'Rajdhani', sans-serif;
+    }
+    .container-fluid{
+        backgroundColor: #f8f9fa;
+    }
+    .card{
+        background-color: #1a1d29;
+        border: 1px solid #2d3748;
+        box-shadow: 0 0 15px rgba(66, 153, 225, 0.15);
+    }
+    .card h5{
+        color: #e2e8f0;
+    }
+    th{
+        color: #e2e8f0;
+    }
+    td span[title] {
+        color: #e2e8f0;
+    }
+</style>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Content Moderation Admin</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#users">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#classifications">Classifications</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h1 style="color: #f56565">Content Moderation Dashboard</h1>
+                <p style="color: #f56565">Welcome to the admin dashboard for your content moderation system.</p>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card bg-dark text-white mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">Total Users</h5>
+                        <h2>{{ stats.total_users }}</h2>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-primary stretched-link" href="#users">View Details</a>
+                        <div class="small text-primary"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark text-white mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">Total Classifications</h5>
+                        <h2>{{ stats.total_classifications }}</h2>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-primary stretched-link" href="#classifications">View Details</a>
+                        <div class="small text-primary"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark text-white mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">Text Classifications</h5>
+                        <h2>{{ stats.text_classifications }}</h2>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-primary stretched-link" href="#text">View Details</a>
+                        <div class="small text-primary"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark text-white mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">Image Classifications</h5>
+                        <h2>{{ stats.image_classifications }}</h2>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-primary stretched-link" href="#images">View Details</a>
+                        <div class="small text-primary"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Classification Activity</h5>
+                        <button class="btn btn-sm btn-primary" id="refreshChartBtn">Refresh</button>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="classificationChart" width="100%" height="50"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Top Active Users</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="activeUsersContainer">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card" id="recentActivity">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Recent Activity</h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" id="refreshActivityBtn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" id="exportActivityBtn">
+                                <i class="fas fa-file-export"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Type</th>
+                                        <th>Content</th>
+                                        <th>Result</th>
+                                        <th>Timestamp</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in stats.recent_activities %}
+                                    <tr>
+                                        <td class="text-white">{{ activity.user.username }}</td>
+                                        <td class="text-white">
+                                            {% if activity.content_type == 'text' %}
+                                                <span class="badge bg-info">Text</span>
+                                            {% elif activity.content_type == 'file' %}
+                                                <span class="badge bg-secondary">File</span>
+                                            {% elif activity.content_type == 'image' %}
+                                                <span class="badge bg-warning">Image</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-white">
+                                            {% if activity.filename %}
+                                                <i class="fas fa-file me-1"></i> {{ activity.filename }}
+                                            {% else %}
+                                                {% if activity.content_snippet|length > 50 %}
+                                                    {{ activity.content_snippet[:50] }}...
+                                                {% else %}
+                                                    {{ activity.content_snippet }}
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-white">
+                                            {% if 'toxic' in activity.prediction or 'severe_toxic' in activity.prediction %}
+                                                <span class="badge bg-danger">{{ activity.prediction }}</span>
+                                            {% elif 'nsfw' in activity.prediction %}
+                                                <span class="badge bg-danger">{{ activity.prediction }}</span>
+                                            {% elif 'obscene' in activity.prediction or 'threat' in activity.prediction or 'insult' in activity.prediction %}
+                                                <span class="badge bg-warning">{{ activity.prediction }}</span>
+                                            {% elif 'identity_hate' in activity.prediction %}
+                                                <span class="badge bg-danger">{{ activity.prediction }}</span>
+                                            {% elif 'spam' in activity.prediction %}
+                                                <span class="badge bg-warning">{{ activity.prediction }}</span>
+                                            {% else %}
+                                                <span class="badge bg-success">{{ activity.prediction }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-white">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-info view-details" data-id="{{ activity.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <nav aria-label="Activity pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item">
+                                    <a class="page-link bg-dark text-danger" href="#">Previous</a>
+                                </li>
+                                <li class="page-item active"><a class="page-link bg-dark text-danger border-danger" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link bg-dark text-danger" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link bg-dark text-danger" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link bg-dark text-danger" href="#">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Management Section -->
+        <div class="row mt-4" id="users">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>User Management</h5>
+                        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="fas fa-user-plus"></i> Add User
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Admin Status</th>
+                                        <th>Classifications</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- User data will be loaded dynamically via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="isAdmin">
+                            <label class="form-check-label" for="isAdmin">Admin Privileges</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn">Save User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Activity Details Modal -->
+    <div class="modal fade" id="activityDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Classification Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="activityDetailsContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <script>
+        // Sample chart initialization (you'll replace with real data from your API)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize charts and load data
+            initializeClassificationChart();
+            loadTopActiveUsers();
+            loadUserTable();
+            
+            // Button event listeners
+            document.getElementById('refreshChartBtn').addEventListener('click', initializeClassificationChart);
+            document.getElementById('refreshActivityBtn').addEventListener('click', refreshRecentActivity);
+            document.getElementById('exportActivityBtn').addEventListener('click', exportActivityData);
+            document.getElementById('saveUserBtn').addEventListener('click', saveNewUser);
+            
+            // Add click event to all view-details buttons
+            document.querySelectorAll('.view-details').forEach(button => {
+                button.addEventListener('click', function() {
+                    const activityId = this.getAttribute('data-id');
+                    showActivityDetails(activityId);
+                });
+            });
+        });
+        
+        function initializeClassificationChart() {
+            fetch('/admin/stats')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('classificationChart');
+                
+                // If a chart already exists, destroy it first
+                if (window.classificationChart) {
+                    window.classificationChart.destroy();
+                }
+                
+                window.classificationChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Text', 'File', 'Image'],
+                        datasets: [{
+                            label: '# of Classifications',
+                            data: [
+                                data.text_classifications,
+                                data.file_classifications,
+                                data.image_classifications
+                            ],
+                            backgroundColor: [
+                                'rgba(23, 162, 184, 0.7)',
+                                'rgba(108, 117, 125, 0.7)',
+                                'rgba(255, 193, 7, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgb(23, 162, 184)',
+                                'rgb(108, 117, 125)',
+                                'rgb(255, 193, 7)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Classification Types'
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading stats:', error));
+        }
+        
+        function loadTopActiveUsers() {
+            fetch('/admin/stats')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('activeUsersContainer');
+                
+                if (!data.active_users || data.active_users.length === 0) {
+                    container.innerHTML = '<p class="text-center">No active users found.</p>';
+                    return;
+                }
+                
+                let html = '<ul class="list-group">';
+                
+                data.active_users.forEach((user, index) => {
+                    const badges = [
+                        'bg-primary',
+                        'bg-success',
+                        'bg-info',
+                        'bg-warning',
+                        'bg-danger'
+                    ];
+                    
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${index + 1}. ${user[0]}
+                            <span class="badge ${badges[index % badges.length]} rounded-pill">${user[1]}</span>
+                        </li>
+                    `;
+                });
+                
+                html += '</ul>';
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading active users:', error);
+                document.getElementById('activeUsersContainer').innerHTML = 
+                    '<p class="text-center text-danger">Error loading active users.</p>';
+            });
+        }
+        
+        function loadUserTable() {
+            // This would need a real API endpoint in your Flask backend
+            // For now, we'll use a placeholder
+            const tableBody = document.querySelector('#usersTable tbody');
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading users...</td></tr>';
+            
+            // This is a placeholder - you need to implement this API endpoint
+            fetch('/admin/get_users')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(users => {
+                if (users.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No users found.</td></tr>';
+                    return;
+                }
+                
+                tableBody.innerHTML = '';
+                users.forEach(user => {
+                    const adminBadge = user.is_admin 
+                        ? '<span class="badge bg-success">Admin</span>' 
+                        : '<span class="badge bg-secondary">Regular</span>';
+                        
+                    const row = `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>${adminBadge}</td>
+                            <td>${user.classification_count || 0}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary edit-user text-white" data-id="${user.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-user" data-id="${user.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+                
+                // Add event listeners for edit and delete buttons
+                document.querySelectorAll('.edit-user').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        editUser(this.getAttribute('data-id'));
+                    });
+                });
+                
+                document.querySelectorAll('.delete-user').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        deleteUser(this.getAttribute('data-id'));
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading users:', error);
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading users. Please try again.</td></tr>';
+            });
+        }
+        
+        function refreshRecentActivity() {
+            // Implement this function to refresh the recent activity table
+            const activityTable = document.querySelector('#recentActivity .table tbody');
+            activityTable.innerHTML = '<tr><td colspan="6" class="text-center text-white">Refreshing data...</td></tr>';
+            
+            // This is a placeholder - you need to implement this API endpoint
+            setTimeout(() => {
+                activityTable.innerHTML = '<tr><td colspan="6" class="text-center text-white">Activity data refreshed!</td></tr>';
+                // Actually fetch and refresh the data
+            }, 1000);
+        }
+        
+        function exportActivityData() {
+            // Implement this function to export activity data as CSV
+            alert('Export feature will be implemented here.');
+            // This would connect to a server endpoint that returns a CSV file
+        }
+        
+        function saveNewUser() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const isAdmin = document.getElementById('isAdmin').checked;
+            
+            if (!username || !password) {
+                alert('Username and password are required.');
+                return;
+            }
+            
+            // This is a placeholder - you need to implement this API endpoint
+            fetch('/admin/add_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    is_admin: isAdmin
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('User added successfully!');
+                document.getElementById('addUserForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                loadUserTable();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding user: ' + error.message);
+            });
+        }
+        
+        function editUser(userId) {
+            // Implement user editing functionality
+            alert(`Edit user with ID: ${userId}`);
+        }
+        
+        function deleteUser(userId) {
+            // Implement user deletion functionality
+            if (confirm(`Are you sure you want to delete user with ID: ${userId}?`)) {
+                // This is a placeholder - you need to implement this API endpoint
+                fetch(`/admin/delete_user/${userId}`, {
+                    method: 'DELETE',
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('User deleted successfully!');
+                    loadUserTable();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting user: ' + error.message);
+                });
+            }
+        }
+        
+        function showActivityDetails(activityId) {
+            // Implement activity details viewing functionality
+            const modalContent = document.getElementById('activityDetailsContent');
+            modalContent.innerHTML = '<div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
+            // Show the modal while data is loading
+            const modal = new bootstrap.Modal(document.getElementById('activityDetailsModal'));
+            modal.show();
+            
+            // This is a placeholder - you need to implement this API endpoint
+            fetch(`/admin/activity_details/${activityId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(activity => {
+                // Populate the modal with activity details
+                let html = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>ID:</span>
+                                    <span>${activity.id}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>User:</span>
+                                    <span>${activity.user.username}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Type:</span>
+                                    <span>${activity.content_type}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Timestamp:</span>
+                                    <span>${activity.timestamp}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Classification Results</h6>
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Prediction:</span>
+                                    <span>${activity.prediction}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6>Content</h6>
+                            <div class="card">
+                                <div class="card-body bg-light">
+                                    <pre class="mb-0">${activity.content_snippet || activity.filename || 'No content available'}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modalContent.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading activity details:', error);
+                modalContent.innerHTML = '<div class="alert alert-danger">Error loading activity details.</div>';
+            });
+        }
+    </script>
+</body>
+</html>
